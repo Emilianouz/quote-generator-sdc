@@ -2,14 +2,10 @@ import express from "express";
 import cors from "cors";
 
 const app = express();
-const port =  3000; //process.env.PORT ||
+const port = 3000;
 
 app.use(cors());
 app.use(express.json());
-
-app.listen(port, () => {
-  console.log(`Server running on port:${port}`);
-});
 
 const quotes = [
   {
@@ -29,34 +25,26 @@ function randomQuote() {
 
 app.get("/", (req, res) => {
   const quote = randomQuote();
-  res.json(quote)
-  //res.json(`"${quote.quote}" -${quote.author}`); //send/json
+  res.json(quote);
 });
 
-
 app.post("/", (req, res) => {
-  const bodyBytes = [];
-  req.on("data", chunk => bodyBytes.push(...chunk));
-  req.on("end", () => {
-    const bodyString = String.fromCharCode(...bodyBytes);
-    let body;
-    try {
-      body = JSON.parse(bodyString);
-    } catch (error) {
-      console.error(`Failed to parse body ${bodyString} as JSON: ${error}`);
-      res.status(400).send("Expected body to be JSON."); // 
-      return;
-    }
-    if (typeof body != "object" || !("quote" in body) || !("author" in body)) {
-      console.error(`Failed to extract quote and author from post body: ${bodyString}`);
-      res.status(400).send("Expected body to be a JSON object containing keys quote and author.");
-      return;
-    }
-    quotes.push({ 
-      quote: body.quote,
-      author: body.author,
-    }); //
-    //res.send("ok");
-    res.status(201).json({message:"Quote added"}) // agregada
+  const { quote, author } = req.body;
+  
+  if (!quote || !author) {
+    return res.status(400).json({ 
+      error: "Expected body to be a JSON object containing keys quote and author." 
+    });
+  }
+  
+  quotes.push({ 
+    quote: quote,
+    author: author,
   });
+  
+  res.status(201).json({ message: "Quote added" });
+});
+
+app.listen(port, () => {
+  console.log(`Server running on port:${port}`);
 });
